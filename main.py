@@ -8,8 +8,7 @@ HEIGHT = 400
 screen = pygame.display.set_mode(size=(WIDTH, HEIGHT))
 pygame.display.set_caption("Runner")
 
-test_surface = pygame.Surface(size=(100, 200))
-test_surface.fill("Red")
+sky_image = pygame.image.load("")
 
 clock = pygame.time.Clock()
 MAX_FPS = 60
@@ -23,7 +22,6 @@ while True:
 
     # Draw elements
     # Place test_surface on the screen
-    screen.blit(test_surface, (200, 100))
 
     # Update screen
     pygame.display.update()
