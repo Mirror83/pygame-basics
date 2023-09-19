@@ -22,8 +22,12 @@ ground_surface = pygame.image.load("assets/graphics/ground.png").convert_alpha()
 text_surface = text_font.render("My game", False, "Black")
 
 snail_surface = pygame.image.load("assets/graphics/snail/snail1.png").convert_alpha()
-snail_x_pos = 600
+snail_rectangle = snail_surface.get_rect(midbottom=(600, 300))
 snail_speed = 2
+
+player_surface = pygame.image.load("assets/graphics/player/player_walk_1.png").convert_alpha()
+# Takes a surface and draws a rectangle around it
+player_rectangle = player_surface.get_rect(midbottom=(80, 300))
 
 while True:
     # Event loop
@@ -36,11 +40,12 @@ while True:
     screen.blit(sky_surface, (0, 0))
     screen.blit(ground_surface, (0, HEIGHT - 100))
     screen.blit(text_surface, (WIDTH / 2 - text_surface.get_rect().width / 2, 20))
-    if snail_x_pos < -100:
-        snail_x_pos = WIDTH
+    if snail_rectangle.left < -100:
+        snail_rectangle.left = WIDTH
 
-    snail_x_pos -= snail_speed
-    screen.blit(snail_surface, (snail_x_pos, 260))
+    snail_rectangle.left -= snail_speed
+    screen.blit(snail_surface, snail_rectangle)
+    screen.blit(player_surface, player_rectangle)
 
     # Update screen
     pygame.display.update()
