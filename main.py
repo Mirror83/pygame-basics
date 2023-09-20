@@ -49,6 +49,10 @@ while True:
                 print("Clicked on player")
             print(event)
 
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                print("Jump")
+
     # Draw elements
     screen.blit(sky_surface, (0, 0))
     screen.blit(ground_surface, (0, GROUND_POSISTION))
