@@ -5,6 +5,7 @@ pygame.init()
 
 WIDTH = 800
 HEIGHT = 400
+GROUND_POSISTION = 300
 screen = pygame.display.set_mode(size=(WIDTH, HEIGHT))
 pygame.display.set_caption("Runner")
 
@@ -22,12 +23,13 @@ ground_surface = pygame.image.load("assets/graphics/ground.png").convert_alpha()
 text_surface = text_font.render("My game", False, "Black")
 
 snail_surface = pygame.image.load("assets/graphics/snail/snail1.png").convert_alpha()
-snail_rectangle = snail_surface.get_rect(midbottom=(600, 300))
+snail_rectangle = snail_surface.get_rect(midbottom=(600, GROUND_POSISTION))
 snail_speed = 2
 
 player_surface = pygame.image.load("assets/graphics/player/player_walk_1.png").convert_alpha()
 # Takes a surface and draws a rectangle around it
-player_rectangle = player_surface.get_rect(midbottom=(80, 300))
+player_rectangle = player_surface.get_rect(midbottom=(80, GROUND_POSISTION))
+has_collided = False
 
 while True:
     # Event loop
@@ -35,6 +37,13 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+        if event.type == pygame.MOUSEMOTION:
+            if player_rectangle.collidepoint(event.pos):
+                print("Mouse over player")
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if player_rectangle.collidepoint(event.pos):
+                print("Clicked on player")
+            print(event)
 
     # Draw elements
     screen.blit(sky_surface, (0, 0))
@@ -43,9 +52,13 @@ while True:
     if snail_rectangle.left < -100:
         snail_rectangle.left = WIDTH
 
-    snail_rectangle.left -= snail_speed
+    snail_rectangle.x -= snail_speed
     screen.blit(snail_surface, snail_rectangle)
     screen.blit(player_surface, player_rectangle)
+
+    if player_rectangle.colliderect(snail_rectangle) and has_collided == False:
+        has_collided = True
+        print("Collided")
 
     # Update screen
     pygame.display.update()
