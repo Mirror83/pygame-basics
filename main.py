@@ -7,16 +7,14 @@ WIDTH = 800
 HEIGHT = 400
 GROUND_POSITION = 300
 screen = pygame.display.set_mode(size=(WIDTH, HEIGHT))
-pygame.display.set_caption("Runner")
+pygame.display.set_caption("Pixel Runner")
 
 clock = pygame.time.Clock()
 MAX_FPS = 60
 
-
 text_color = (64, 64, 64) # In RGB
 box_color = "#c0e8ec"
 text_font = pygame.font.Font("assets/fonts/Pixeltype.ttf", 50)
-
 
 # Convert images into a format that pygame can with easily
 sky_surface = pygame.image.load("assets/graphics/sky.png").convert_alpha()
@@ -34,14 +32,37 @@ PLAYER_START_POSITION = (80, GROUND_POSITION)
 player_rectangle = player_surface.get_rect(midbottom=PLAYER_START_POSITION)
 player_gravity = 0
 
-game_active = True
+# Title screen surfaces
+TITLE_SCREEN_BG = (94, 129, 162)
+title_surface = text_font.render("Pixel Runner", False, text_color)
+title_rectangle = title_surface.get_rect(center=SCORE_POSITION)
+
+title_player_surface = pygame.image.load("assets/graphics/player/player_stand.png").convert_alpha()
+title_player_surface = pygame.transform.rotozoom(title_player_surface, 0, 2)
+title_player_rectangle = title_player_surface.get_rect(center=screen.get_rect().center)
+
+instruction_surface = text_font.render("Press ENTER to play", False, text_color)
+instruction_rectangle = instruction_surface.get_rect(center=(WIDTH / 2, HEIGHT - 50))
+
+game_active = False
 start_time = 0
+
+class Score:
+    def __init__(self):
+        self.score: int = 0
+
+    def update_score(self, new_score: int):
+        self.score = new_score
+
+score = Score()
+
 
 def display_score():
     current_time = pygame.time.get_ticks() - start_time
     # Antialiasing has been set to False only because this is a pixel art game
     # For other applications, antialiasing should be set to True
-    score_surface = text_font.render(f"Score: {current_time // 1000}", False, text_color)
+    score.update_score(current_time // 1000)
+    score_surface = text_font.render(f"Score: {score.score}", False, text_color)
     score_rectangle = score_surface.get_rect(center=SCORE_POSITION)
     pygame.draw.rect(screen, box_color, score_rectangle)
     screen.blit(score_surface, score_rectangle)
@@ -101,7 +122,16 @@ while True:
             # pygame.quit()
             # exit()
     else:
-        screen.fill(box_color)
+        screen.fill(TITLE_SCREEN_BG)
+        screen.blit(title_surface, title_rectangle)
+
+        if start_time > 0:
+            score_surface = text_font.render(f"Score: {score.score}", False, text_color)
+            score_rectangle = score_surface.get_rect(center=(WIDTH / 2, 90))
+            screen.blit(score_surface, score_rectangle)
+
+        screen.blit(title_player_surface, title_player_rectangle)
+        screen.blit(instruction_surface, instruction_rectangle)
 
     # Update screen
     pygame.display.update()
