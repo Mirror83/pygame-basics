@@ -29,10 +29,11 @@ score_rectangle = score_surface.get_rect(center=(WIDTH / 2, 50))
 
 snail_surface = pygame.image.load("assets/graphics/snail/snail1.png").convert_alpha()
 snail_rectangle = snail_surface.get_rect(midbottom=(600, GROUND_POSISTION))
-snail_speed = 2
+snail_speed = 4
 
 player_surface = pygame.image.load("assets/graphics/player/player_walk_1.png").convert_alpha()
 player_rectangle = player_surface.get_rect(midbottom=(80, GROUND_POSISTION))
+player_gravity = 0
 has_collided = False
 
 while True:
@@ -41,18 +42,19 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
-        # if event.type == pygame.MOUSEMOTION:
-        #     if player_rectangle.collidepoint(event.pos):
-        #         print("Mouse over player")
+
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if player_rectangle.collidepoint(event.pos):
-                print("Clicked on player")
-            print(event)
+            if event.button == pygame.BUTTON_LEFT:
+                if player_rectangle.bottom >= GROUND_POSISTION:   
+                    if player_rectangle.collidepoint(event.pos):
+                        print("Clicked on player")
+                        player_gravity = -20
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                print("Jump")
-
+                if player_rectangle.bottom >= GROUND_POSISTION: 
+                    player_gravity = -20
+            
     # Draw elements
     screen.blit(sky_surface, (0, 0))
     screen.blit(ground_surface, (0, GROUND_POSISTION))
@@ -66,6 +68,14 @@ while True:
         snail_rectangle.left = WIDTH
 
     screen.blit(snail_surface, snail_rectangle)
+
+    # Player gravity
+    player_gravity += 1
+    player_rectangle.y += player_gravity
+
+    if player_rectangle.bottom >= GROUND_POSISTION:
+        player_rectangle.bottom = GROUND_POSISTION
+
     screen.blit(player_surface, player_rectangle)
 
     if player_rectangle.colliderect(snail_rectangle) and has_collided == False:
