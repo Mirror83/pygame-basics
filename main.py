@@ -22,10 +22,7 @@ text_font = pygame.font.Font("assets/fonts/Pixeltype.ttf", 50)
 sky_surface = pygame.image.load("assets/graphics/sky.png").convert_alpha()
 ground_surface = pygame.image.load("assets/graphics/ground.png").convert_alpha()
 
-# Antialiasing has been set to False only because this is a pixel art game
-# For other applications, antialiasing should be set to True
-score_surface = text_font.render("My game", False, text_color)
-score_rectangle = score_surface.get_rect(center=(WIDTH / 2, 50))
+SCORE_POSITION = (WIDTH / 2, 50)
 
 snail_surface = pygame.image.load("assets/graphics/snail/snail1.png").convert_alpha()
 SNAIL_START_POSITION = (WIDTH, GROUND_POSITION)
@@ -36,7 +33,18 @@ player_surface = pygame.image.load("assets/graphics/player/player_walk_1.png").c
 PLAYER_START_POSITION = (80, GROUND_POSITION)
 player_rectangle = player_surface.get_rect(midbottom=PLAYER_START_POSITION)
 player_gravity = 0
+
 game_active = True
+start_time = 0
+
+def display_score():
+    current_time = pygame.time.get_ticks() - start_time
+    # Antialiasing has been set to False only because this is a pixel art game
+    # For other applications, antialiasing should be set to True
+    score_surface = text_font.render(f"Score: {current_time // 1000}", False, text_color)
+    score_rectangle = score_surface.get_rect(center=SCORE_POSITION)
+    pygame.draw.rect(screen, box_color, score_rectangle)
+    screen.blit(score_surface, score_rectangle)
 
 while True:
     # Event loop
@@ -59,9 +67,10 @@ while True:
                         player_gravity = -20
         else:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_RETURN:
                     snail_rectangle.midbottom = SNAIL_START_POSITION
                     player_rectangle.midbottom = PLAYER_START_POSITION
+                    start_time = pygame.time.get_ticks()
                     game_active = True
             
     if game_active:
@@ -69,8 +78,7 @@ while True:
         screen.blit(sky_surface, (0, 0))
         screen.blit(ground_surface, (0, GROUND_POSITION))
 
-        pygame.draw.rect(screen, box_color, score_rectangle)
-        screen.blit(score_surface, score_rectangle)
+        display_score()
 
         # Snail animation
         snail_rectangle.x -= snail_speed
