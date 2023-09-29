@@ -24,14 +24,34 @@ ground_surface = pygame.image.load("assets/graphics/ground.png").convert_alpha()
 SCORE_POSITION = (WIDTH / 2, 50)
 
 obstacle_rectangle_list: list[pygame.Rect] = []
-snail_surface = pygame.image.load("assets/graphics/snail/snail_1.png").convert_alpha()
+
+snail_frame_1 = pygame.image.load("assets/graphics/snail/snail_1.png").convert_alpha()
+snail_frame_2 = pygame.image.load("assets/graphics/snail/snail_2.png").convert_alpha()
+snail_frame_list: list[pygame.Surface] = [snail_frame_1, snail_frame_2]
+snail_frame_index = 0
+
+snail_surface = snail_frame_list[snail_frame_index]
 SNAIL_START_POSITION = (WIDTH, GROUND_POSITION)
 
-fly_surface = pygame.image.load("assets/graphics/fly/fly_1.png").convert_alpha()
+fly_frame_1 = pygame.image.load("assets/graphics/fly/fly_1.png").convert_alpha()
+fly_frame_2 = pygame.image.load("assets/graphics/fly/fly_2.png").convert_alpha()
+fly_frame_index = 0
+fly_frame_list: list[pygame.Surface] = [fly_frame_1, fly_frame_2]
+
+fly_surface = fly_frame_list[fly_frame_index]
 FLY_Y_BOTTOM = GROUND_POSITION - 100
+
 obstacle_speed = 4
 
-player_surface = pygame.image.load("assets/graphics/player/player_walk_1.png").convert_alpha()
+player_walk_1 = pygame.image.load("assets/graphics/player/player_walk_1.png").convert_alpha()
+player_walk_2 = pygame.image.load("assets/graphics/player/player_walk_2.png").convert_alpha()
+player_walk_list: list[pygame.Surface] = [player_walk_1, player_walk_2]
+player_walk_index = 0
+
+player_jump = pygame.image.load("assets/graphics/player/player_jump.png").convert_alpha()
+
+player_surface = player_walk_list[player_walk_index]
+
 PLAYER_START_POSITION = (80, GROUND_POSITION)
 player_rectangle = player_surface.get_rect(midbottom=PLAYER_START_POSITION)
 # player_collision_rect = pygame.Rect(player_rectangle.left, player_rectangle.top, player_rectangle.width, player_rectangle.width)
@@ -53,10 +73,34 @@ instruction_rectangle = instruction_surface.get_rect(center=(WIDTH / 2, HEIGHT -
 obstacle_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(obstacle_timer, 2000)
 
+snail_animation_timer = pygame.USEREVENT + 2
+pygame.time.set_timer(snail_animation_timer, 500)
+
+fly_animation_timer = pygame.USEREVENT + 3
+pygame.time.set_timer(fly_animation_timer, 200)
 
 game_active = False
 start_time = 0
 score = 0
+
+def player_animation():
+    """
+    Perform walking animation if player is on the floor.
+    Otherwise show jumping sprite
+    """
+    global player_walk_index, player_surface
+    if player_rectangle.midbottom == PLAYER_START_POSITION:
+        # 0.1 is added so that it takes a while for the index to add up to the 
+        # next integer. The image will therefore not be changed after every framee, but after
+        # every few frames. It acts like a custom timer
+        player_walk_index += 0.1
+        if player_walk_index >= len(player_walk_list):
+            player_walk_index = 0
+        player_surface = player_walk_list[int(player_walk_index)]
+        
+    else:
+        player_surface = player_jump
+
 
 
 def display_score():
@@ -125,11 +169,20 @@ while True:
                 else:
                     obstacle_rectangle = snail_surface.get_rect(bottomright=(randint(1000, 1400), GROUND_POSITION))
                 obstacle_rectangle_list.append(obstacle_rectangle)
+
+            if event.type == snail_animation_timer:
+                snail_frame_index = (snail_frame_index + 1) % len(snail_frame_list)
+                snail_surface = snail_frame_list[snail_frame_index]
+
+            if event.type == fly_animation_timer:
+                fly_frame_index = (fly_frame_index + 1) % len(fly_frame_list)
+                fly_surface = fly_frame_list[fly_frame_index]
                 
         else:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     player_rectangle.midbottom = PLAYER_START_POSITION
+                    player_gravity = 0
                     obstacle_rectangle_list.clear()
                     start_time = pygame.time.get_ticks()
                     game_active = True
@@ -151,6 +204,7 @@ while True:
         if player_rectangle.bottom >= GROUND_POSITION:
             player_rectangle.bottom = GROUND_POSITION
 
+        player_animation()
         screen.blit(player_surface, player_rectangle)
 
         obstacle_rectangle_list = move_obstacles(obstacle_rectangle_list)
