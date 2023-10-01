@@ -3,7 +3,7 @@ import pygame
 
 class Player(pygame.sprite.Sprite):
     GROUND_POSITION = 300
-    START_POSITION = (200, GROUND_POSITION)
+    START_POSITION = (80, GROUND_POSITION)
 
     def __init__(self) -> None:
         super().__init__()
