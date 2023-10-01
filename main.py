@@ -49,21 +49,32 @@ score = 0
 
 player_group = pygame.sprite.GroupSingle()
 player_group.add(Player())
+
 obstacle_group = pygame.sprite.Group()
 
 
 def display_score():
-    global score_surface, score_rectangle
+    global score_surface, score_rectangle, score
     current_time = pygame.time.get_ticks() - start_time
     # Antialiasing has been set to False only because this is a pixel art game
     # For other applications, antialiasing should be set to True
-    new_score = current_time // 1000
-    score_surface = text_font.render(f"Score: {new_score}", False, TEXT_COLOUR)
+    score = current_time // 1000
+    score_surface = text_font.render(f"Score: {score}", False, TEXT_COLOUR)
     score_rectangle = score_surface.get_rect(center=SCORE_POSITION)
     pygame.draw.rect(screen, BOX_COLOUR, score_rectangle)
     screen.blit(score_surface, score_rectangle)
 
-    return new_score
+
+def has_collided() -> bool:
+    global player_group, obstacle_group
+    sprite_list = pygame.sprite.spritecollide(player_group.sprite, obstacle_group, False)
+
+    collided = len(sprite_list) > 0
+
+    if collided:
+        obstacle_group.empty()
+
+    return collided
 
 
 while True:
@@ -92,17 +103,20 @@ while True:
     if game_active:
         if score > 0 and score % 20 == 0:
             Obstacle.OBSTACLE_SPEED += 0.01
+
         # Draw elements
         screen.blit(sky_surface, (0, 0))
         screen.blit(ground_surface, (0, GROUND_POSITION))
 
-        score = display_score()
+        display_score()
 
         player_group.draw(screen)
         player_group.update()
 
         obstacle_group.draw(screen)
         obstacle_group.update()
+
+        game_active = not has_collided()
 
     else:
         if start_time > 0:
