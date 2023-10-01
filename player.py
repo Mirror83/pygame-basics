@@ -13,7 +13,10 @@ class Player(pygame.sprite.Sprite):
         player_walk_2 = pygame.image.load("assets/graphics/player/player_walk_2.png").convert_alpha()
         self.player_walk_list: list[pygame.Surface] = [player_walk_1, player_walk_2]
         self.player_walk_index = 0
+
         self.player_jump = pygame.image.load("assets/graphics/player/player_jump.png").convert_alpha()
+        self.jump_sound = pygame.mixer.Sound("assets/audio/jump.mp3")
+        self.jump_sound.set_volume(0.5)
 
         self.image = self.player_walk_list[self.player_walk_index]
         self.rect = self.image.get_rect(midbottom=Player.START_POSITION)
@@ -25,6 +28,7 @@ class Player(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE] and self.is_on_ground():
             self.gravity = -20
+            self.jump_sound.play()
 
     def apply_gravity(self) -> None:
         self.gravity += 1
