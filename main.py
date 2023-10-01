@@ -2,6 +2,10 @@ import pygame
 from sys import exit
 from random import randint
 
+from obstacle import Obstacle
+from obstacle_kind import ObstacleKind
+from player import Player
+
 pygame.init()
 
 WIDTH = 800
@@ -13,8 +17,8 @@ pygame.display.set_caption("Pixel Runner")
 clock = pygame.time.Clock()
 MAX_FPS = 60
 
-text_color = (64, 64, 64) # In RGB
-box_color = "#c0e8ec"
+TEXT_COLOUR = (64, 64, 64)  # In RGB
+BOX_COLOUR = "#c0e8ec"
 text_font = pygame.font.Font("assets/fonts/Pixeltype.ttf", 50)
 
 # Convert images into a format that pygame can with easily
@@ -23,124 +27,43 @@ ground_surface = pygame.image.load("assets/graphics/ground.png").convert_alpha()
 
 SCORE_POSITION = (WIDTH / 2, 50)
 
-obstacle_rectangle_list: list[pygame.Rect] = []
-
-snail_frame_1 = pygame.image.load("assets/graphics/snail/snail_1.png").convert_alpha()
-snail_frame_2 = pygame.image.load("assets/graphics/snail/snail_2.png").convert_alpha()
-snail_frame_list: list[pygame.Surface] = [snail_frame_1, snail_frame_2]
-snail_frame_index = 0
-
-snail_surface = snail_frame_list[snail_frame_index]
-SNAIL_START_POSITION = (WIDTH, GROUND_POSITION)
-
-fly_frame_1 = pygame.image.load("assets/graphics/fly/fly_1.png").convert_alpha()
-fly_frame_2 = pygame.image.load("assets/graphics/fly/fly_2.png").convert_alpha()
-fly_frame_index = 0
-fly_frame_list: list[pygame.Surface] = [fly_frame_1, fly_frame_2]
-
-fly_surface = fly_frame_list[fly_frame_index]
-FLY_Y_BOTTOM = GROUND_POSITION - 100
-
-obstacle_speed = 4
-
-player_walk_1 = pygame.image.load("assets/graphics/player/player_walk_1.png").convert_alpha()
-player_walk_2 = pygame.image.load("assets/graphics/player/player_walk_2.png").convert_alpha()
-player_walk_list: list[pygame.Surface] = [player_walk_1, player_walk_2]
-player_walk_index = 0
-
-player_jump = pygame.image.load("assets/graphics/player/player_jump.png").convert_alpha()
-
-player_surface = player_walk_list[player_walk_index]
-
-PLAYER_START_POSITION = (80, GROUND_POSITION)
-player_rectangle = player_surface.get_rect(midbottom=PLAYER_START_POSITION)
-# player_collision_rect = pygame.Rect(player_rectangle.left, player_rectangle.top, player_rectangle.width, player_rectangle.width)
-player_gravity = 0
-
 # Title screen surfaces
 TITLE_POSITION = (WIDTH / 2, 70)
 TITLE_SCREEN_BG = (94, 129, 162)
-title_surface = text_font.render("Pixel Runner", False, text_color)
+title_surface = text_font.render("Pixel Runner", False, TEXT_COLOUR)
 title_rectangle = title_surface.get_rect(center=TITLE_POSITION)
 
 title_player_surface = pygame.image.load("assets/graphics/player/player_stand.png").convert_alpha()
 title_player_surface = pygame.transform.rotozoom(title_player_surface, 0, 2)
 title_player_rectangle = title_player_surface.get_rect(center=screen.get_rect().center)
 
-instruction_surface = text_font.render("Press ENTER to play", False, text_color)
+instruction_surface = text_font.render("Press ENTER to play", False, TEXT_COLOUR)
 instruction_rectangle = instruction_surface.get_rect(center=(WIDTH / 2, HEIGHT - 50))
 
 obstacle_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(obstacle_timer, 2000)
 
-snail_animation_timer = pygame.USEREVENT + 2
-pygame.time.set_timer(snail_animation_timer, 500)
-
-fly_animation_timer = pygame.USEREVENT + 3
-pygame.time.set_timer(fly_animation_timer, 200)
-
 game_active = False
 start_time = 0
 score = 0
 
-def player_animation():
-    """
-    Perform walking animation if player is on the floor.
-    Otherwise show jumping sprite
-    """
-    global player_walk_index, player_surface
-    if player_rectangle.midbottom == PLAYER_START_POSITION:
-        # 0.1 is added so that it takes a while for the index to add up to the 
-        # next integer. The image will therefore not be changed after every framee, but after
-        # every few frames. It acts like a custom timer
-        player_walk_index += 0.1
-        if player_walk_index >= len(player_walk_list):
-            player_walk_index = 0
-        player_surface = player_walk_list[int(player_walk_index)]
-        
-    else:
-        player_surface = player_jump
-
+player_group = pygame.sprite.GroupSingle()
+player_group.add(Player())
+obstacle_group = pygame.sprite.Group()
 
 
 def display_score():
+    global score_surface, score_rectangle
     current_time = pygame.time.get_ticks() - start_time
     # Antialiasing has been set to False only because this is a pixel art game
     # For other applications, antialiasing should be set to True
-    score = current_time // 1000
-    score_surface = text_font.render(f"Score: {score}", False, text_color)
+    new_score = current_time // 1000
+    score_surface = text_font.render(f"Score: {new_score}", False, TEXT_COLOUR)
     score_rectangle = score_surface.get_rect(center=SCORE_POSITION)
-    pygame.draw.rect(screen, box_color, score_rectangle)
+    pygame.draw.rect(screen, BOX_COLOUR, score_rectangle)
     screen.blit(score_surface, score_rectangle)
 
-    return score
-
-def move_obstacles(obstacle_rectangle_list: list[pygame.Rect]):
-    global game_active
-    if len(obstacle_rectangle_list) > 0:
-        for obstacle_rectangle in obstacle_rectangle_list:
-            obstacle_rectangle.x -= obstacle_speed
-
-            if (obstacle_rectangle.bottom == FLY_Y_BOTTOM):
-                screen.blit(fly_surface, obstacle_rectangle)
-
-                if obstacle_rectangle.collidepoint(player_rectangle.midtop):
-                # if obstacle_rectangle.colliderect(player_rectangle):
-                    game_active = False
-            else:
-                screen.blit(snail_surface, obstacle_rectangle)
-                
-                if obstacle_rectangle.collidepoint(player_rectangle.midbottom[0], player_rectangle.midbottom[1] - 10):
-                # if obstacle_rectangle.colliderect(player_rectangle):
-                    game_active = False
-
-            obstacle_rectangle_list = [obstacle_rectangle \
-                                       for obstacle_rectangle in obstacle_rectangle_list \
-                                        if obstacle_rectangle.x > -100
-                ]
-            
-    return obstacle_rectangle_list
-
+    return new_score
 
 
 while True:
@@ -151,63 +74,35 @@ while True:
             exit()
 
         if game_active:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == pygame.BUTTON_LEFT:
-                    if player_rectangle.bottom >= GROUND_POSITION:   
-                        if player_rectangle.collidepoint(event.pos):
-                            print("Clicked on player")
-                            player_gravity = -20
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    if player_rectangle.bottom >= GROUND_POSITION: 
-                        player_gravity = -20
-
             if event.type == obstacle_timer:
-                if (randint(0, 4) == 0):
-                    obstacle_rectangle = fly_surface.get_rect(bottomright=(randint(1000, 1400), FLY_Y_BOTTOM))
+                if randint(0, 4) == 0:
+                    obstacle_group.add(Obstacle(ObstacleKind.FLY))
                 else:
-                    obstacle_rectangle = snail_surface.get_rect(bottomright=(randint(1000, 1400), GROUND_POSITION))
-                obstacle_rectangle_list.append(obstacle_rectangle)
+                    obstacle_group.add(Obstacle(ObstacleKind.SNAIL))
 
-            if event.type == snail_animation_timer:
-                snail_frame_index = (snail_frame_index + 1) % len(snail_frame_list)
-                snail_surface = snail_frame_list[snail_frame_index]
-
-            if event.type == fly_animation_timer:
-                fly_frame_index = (fly_frame_index + 1) % len(fly_frame_list)
-                fly_surface = fly_frame_list[fly_frame_index]
-                
         else:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
-                    player_rectangle.midbottom = PLAYER_START_POSITION
-                    player_gravity = 0
-                    obstacle_rectangle_list.clear()
+                    # player_rectangle.midbottom = PLAYER_START_POSITION
+                    # obstacle_rectangle_list.clear()
                     start_time = pygame.time.get_ticks()
                     game_active = True
 
     # Game logic        
     if game_active:
-        if score > 0 and score % 10 == 0 :
-            obstacle_speed += 0.01
+        if score > 0 and score % 20 == 0:
+            Obstacle.OBSTACLE_SPEED += 0.01
         # Draw elements
         screen.blit(sky_surface, (0, 0))
         screen.blit(ground_surface, (0, GROUND_POSITION))
 
         score = display_score()
 
-        # Player gravity
-        player_gravity += 1
-        player_rectangle.y += player_gravity
+        player_group.draw(screen)
+        player_group.update()
 
-        if player_rectangle.bottom >= GROUND_POSITION:
-            player_rectangle.bottom = GROUND_POSITION
-
-        player_animation()
-        screen.blit(player_surface, player_rectangle)
-
-        obstacle_rectangle_list = move_obstacles(obstacle_rectangle_list)
+        obstacle_group.draw(screen)
+        obstacle_group.update()
 
     else:
         if start_time > 0:
@@ -217,7 +112,7 @@ while True:
         screen.blit(title_surface, title_rectangle)
 
         if start_time > 0:
-            score_surface = text_font.render(f"Score: {score}", False, text_color)
+            score_surface = text_font.render(f"Score: {score}", False, TEXT_COLOUR)
             score_rectangle = score_surface.get_rect(center=(WIDTH / 2, HEIGHT - 70))
             screen.blit(score_surface, score_rectangle)
         else:
@@ -228,6 +123,5 @@ while True:
     # Update screen
     pygame.display.update()
 
-    # Ensure that the while loop runs at a maximum framerate of MAX_FPS
+    # Ensure that the while loop runs at a maximum frame rate of MAX_FPS
     clock.tick(MAX_FPS)
-
