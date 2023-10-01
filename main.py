@@ -14,6 +14,9 @@ GROUND_POSITION = 300
 screen = pygame.display.set_mode(size=(WIDTH, HEIGHT))
 pygame.display.set_caption("Pixel Runner")
 
+bg_music = pygame.mixer.Sound("assets/audio/music.wav")
+bg_music.set_volume(0.5)
+
 clock = pygame.time.Clock()
 MAX_FPS = 60
 
@@ -51,6 +54,7 @@ player_group = pygame.sprite.GroupSingle()
 player_group.add(Player())
 
 obstacle_group = pygame.sprite.Group()
+bg_music.play(loops=-1)  # The -1 tells pygame to loop it forever
 
 
 def display_score():
