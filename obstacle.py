@@ -8,7 +8,7 @@ class Obstacle(pygame.sprite.Sprite):
     MIN_START_X, MAX_START_X = 1000, 1400
     OBSTACLE_SPEED = 4
 
-    def __init__(self, kind: ObstacleKind):
+    def __init__(self, kind: ObstacleKind) -> None:
         super().__init__()
         self.frame_index = 0
         self.frame_list: list[pygame.Surface] = []
@@ -37,17 +37,17 @@ class Obstacle(pygame.sprite.Sprite):
             )
         )
 
-    def move_obstacle(self):
+    def move_obstacle(self) -> None:
         self.rect.x -= Obstacle.OBSTACLE_SPEED
         if self.rect.x < -100:
             self.kill()
 
-    def update_animation_state(self):
+    def update_animation_state(self) -> None:
         self.frame_index += 0.1
         if self.frame_index >= len(self.frame_list):
             self.frame_index = 0
             self.image = self.frame_list[int(self.frame_index)]
 
-    def update(self):
+    def update(self) -> None:
         self.update_animation_state()
         self.move_obstacle()

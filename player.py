@@ -38,7 +38,10 @@ class Player(pygame.sprite.Sprite):
         if self.is_on_ground():
             self.rect.bottom = Player.GROUND_POSITION
 
-    def update_animation_state(self):
+    def reset_position(self) -> None:
+        self.rect.bottom = Player.GROUND_POSITION
+
+    def update_animation_state(self) -> None:
         if self.is_on_ground():
             self.player_walk_index += 0.1
             if self.player_walk_index >= len(self.player_walk_list):
